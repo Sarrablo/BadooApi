@@ -1,9 +1,7 @@
 from robobrowser import RoboBrowser
 import re
-#browser = RoboBrowser(history=True, parser='html.parser')
+
 BASE_URL = "https://badoo.com{}"
-#for a in browser.find_all("a", {"rel":"profile-view"}):
-#    print(a)
 
 class BadooApi:
 
@@ -21,13 +19,28 @@ class BadooApi:
             self.browser.open(BASE_URL.format(btns[0]['href']))
 
     def extract_users(self):
+        profiles = []
         for a in self.browser.find_all("a", {"rel":"profile-view"}):
-            print(a)
+            profiles.append({"url": a["href"],
+                             "name": a["title"]})
+        return profiles
 
-badoo_api = BadooApi()
-badoo_api.next_page()
-badoo_api.extract_users()
-badoo_api.next_page()
-badoo_api.extract_users()
-badoo_api.next_page()
-badoo_api.extract_users()
+    def get_public_profile(self, url):
+        self.browser.open(BASE_URL.format(url))
+        photos = []
+        for img in self.browser.find_all(class_ = re.compile(r'.*photo-list__img.*js-gallery-img.*')):
+            photos.append(img['src'])
+        info = self.browser.find("title").text.split("|")
+        personal_info = info[0].split(",")
+        name = personal_info[0]
+        sex = personal_info[1]
+        age = personal_info[2]
+        location = info[1]
+        return ({"name":name,
+                "sex": sex,
+                "age": age,
+                "location": location,
+                "photos":photos})
+
+
+
